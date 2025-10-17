@@ -14,18 +14,20 @@ describe('PointService', () => {
       const updatedAt = new Date();
       const userId = 1;
 
-      pointService.pointInfos[userId] = {
+      const user = {
         id: 1,
         point: 0,
         updateMillis: updatedAt.getTime(),
       };
 
+      pointService.pointInfos[userId] = { ...user };
+
       const pointInfo = pointService.getPoint({ userId });
 
       expect(pointInfo).toStrictEqual({
-        id: userId,
-        point: 0,
-        updateMillis: updatedAt.getTime(),
+        id: user.id,
+        point: user.point,
+        updateMillis: user.updateMillis,
       });
     });
 
