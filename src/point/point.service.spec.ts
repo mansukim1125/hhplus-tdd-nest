@@ -1,34 +1,34 @@
+import { UserPointTable } from 'src/database/userpoint.table';
 import { PointService } from './point.service';
 
 describe('PointService', () => {
   let pointService: PointService;
+  let userPointTable: UserPointTable;
 
   beforeEach(() => {
-    pointService = new PointService();
+    userPointTable = new UserPointTable();
+    pointService = new PointService(userPointTable);
   });
 
   describe('getPoint', () => {
-    it("should return user's point information", () => {
+    it("should return user's point information", async () => {
       // 특정 유저의 포인트 정보를 조회한다.
       // 포인트 정보 업데이트 시점을 mock
       const updatedAt = new Date();
-      const userId = 1;
 
-      const user = {
+      const userPoint = {
         id: 1,
         point: 0,
         updateMillis: updatedAt.getTime(),
       };
 
-      pointService.pointInfos[userId] = { ...user };
+      jest
+        .spyOn(userPointTable, 'selectById')
+        .mockImplementation(async () => userPoint);
 
-      const pointInfo = pointService.getPoint({ userId });
+      const pointInfo = await pointService.getPoint({ userId: userPoint.id });
 
-      expect(pointInfo).toStrictEqual({
-        id: user.id,
-        point: user.point,
-        updateMillis: user.updateMillis,
-      });
+      expect(pointInfo).toStrictEqual({ ...userPoint });
     });
 
     it("should return each user's update time, as users have different update times", () => {
