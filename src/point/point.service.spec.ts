@@ -13,6 +13,9 @@ describe('PointService', () => {
       jest.useFakeTimers();
       jest.setSystemTime(new Date());
 
+      // 포인트 정보 업데이트 시점을 mock
+      pointService.updatedAt = new Date();
+
       const updatedAt = new Date();
       const userId = 1;
 
