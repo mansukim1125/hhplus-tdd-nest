@@ -12,9 +12,13 @@ describe('PointService', () => {
       // 특정 유저의 포인트 정보를 조회한다.
       // 포인트 정보 업데이트 시점을 mock
       const updatedAt = new Date();
-      pointService.updatedAt = updatedAt.getTime();
-
       const userId = 1;
+
+      pointService.pointInfos[userId] = {
+        id: 1,
+        point: 0,
+        updateMillis: updatedAt.getTime(),
+      };
 
       const pointInfo = pointService.getPoint({ userId });
 
@@ -36,18 +40,18 @@ describe('PointService', () => {
       };
 
       const secondUser = {
-        id: 1,
+        id: 2,
         point: 0,
         updateMillis: new Date('2025-10-17').getTime(),
       };
 
-      pointService.updatedAt = firstUser.updateMillis;
+      pointService.pointInfos[firstUser.id] = { ...firstUser };
 
       const firstUserPointInfo = pointService.getPoint({
         userId: firstUser.id,
       });
 
-      pointService.updatedAt = secondUser.updateMillis;
+      pointService.pointInfos[secondUser.id] = { ...secondUser };
 
       const secondUserPointInfo = pointService.getPoint({
         userId: secondUser.id,
