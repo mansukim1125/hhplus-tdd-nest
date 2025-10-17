@@ -1,4 +1,4 @@
-import { UserPointTable } from 'src/database/userpoint.table';
+import { UserPointTable } from '../database/userpoint.table';
 import { PointService } from './point.service';
 
 describe('PointService', () => {
@@ -31,31 +31,33 @@ describe('PointService', () => {
       expect(pointInfo).toStrictEqual({ ...userPoint });
     });
 
-    it("should return each user's update time, as users have different update times", () => {
+    it("should return each user's update time, as users have different update times", async () => {
       // 서로 다른 업데이트 시점을 가지는 유저는 각자의 업데이트 시점이 반환되어야 한다.
-      // 포인트 정보 업데이트 시점을 mock
+      const userPoints = [
+        {
+          id: 1,
+          point: 0,
+          updateMillis: new Date('2025-10-18').getTime(),
+        },
+        {
+          id: 2,
+          point: 0,
+          updateMillis: new Date('2025-10-17').getTime(),
+        },
+      ];
 
-      const firstUser = {
-        id: 1,
-        point: 0,
-        updateMillis: new Date('2025-10-18').getTime(),
-      };
+      jest
+        .spyOn(userPointTable, 'selectById')
+        .mockImplementation(async (userId: number) =>
+          userPoints.find((userPoint) => userPoint.id === userId),
+        );
 
-      const secondUser = {
-        id: 2,
-        point: 0,
-        updateMillis: new Date('2025-10-17').getTime(),
-      };
-
-      pointService.pointInfos[firstUser.id] = { ...firstUser };
-      pointService.pointInfos[secondUser.id] = { ...secondUser };
-
-      const firstUserPointInfo = pointService.getPoint({
-        userId: firstUser.id,
+      const firstUserPointInfo = await pointService.getPoint({
+        userId: userPoints[0].id,
       });
 
-      const secondUserPointInfo = pointService.getPoint({
-        userId: secondUser.id,
+      const secondUserPointInfo = await pointService.getPoint({
+        userId: userPoints[1].id,
       });
 
       expect(firstUserPointInfo.updateMillis).not.toEqual(
