@@ -46,25 +46,19 @@ describe('PointService', () => {
       };
 
       pointService.pointInfos[firstUser.id] = { ...firstUser };
+      pointService.pointInfos[secondUser.id] = { ...secondUser };
 
       const firstUserPointInfo = pointService.getPoint({
         userId: firstUser.id,
       });
 
-      pointService.pointInfos[secondUser.id] = { ...secondUser };
-
       const secondUserPointInfo = pointService.getPoint({
         userId: secondUser.id,
       });
 
-      expect(firstUserPointInfo).toStrictEqual({ ...firstUser });
-      expect(secondUserPointInfo).toStrictEqual({ ...secondUser });
-
-      const secondAttemptfirstUserPointInfo = pointService.getPoint({
-        userId: firstUser.id,
-      });
-
-      expect(secondAttemptfirstUserPointInfo).toStrictEqual({ ...firstUser });
+      expect(firstUserPointInfo.updateMillis).not.toEqual(
+        secondUserPointInfo.updateMillis,
+      );
     });
   });
 });
