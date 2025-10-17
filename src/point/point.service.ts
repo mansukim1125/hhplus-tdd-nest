@@ -1,15 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { UserPoint } from './point.model';
+import { UserPointTable } from '../database/userpoint.table';
 
 @Injectable()
 export class PointService {
-  public pointInfos: { [userId: number]: UserPoint } = {};
+  constructor(private readonly userPointTable: UserPointTable) {}
 
-  getPoint({ userId }: { userId: number }) {
+  async getPoint({ userId }: { userId: number }) {
+    const userPoint = await this.userPointTable.selectById(userId);
+
+    if (!userPoint) {
+      return null;
+    }
+
     return {
-      id: this.pointInfos[userId].id,
-      point: this.pointInfos[userId].point,
-      updateMillis: this.pointInfos[userId].updateMillis,
+      id: userPoint.id,
+      point: userPoint.point,
+      updateMillis: userPoint.updateMillis,
     };
   }
 }
