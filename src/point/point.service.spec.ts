@@ -69,19 +69,36 @@ describe('PointService', () => {
   describe('charge', () => {
     it('should charge points for a user', async () => {
       // 특정 유저에게 포인트 적립을 할 수 있는지 테스트
-      const mockUpdatedAt = new Date();
 
-      jest.useFakeTimers();
-      jest.setSystemTime(mockUpdatedAt);
+      // 해당 테스트에서는 업데이트 시점은 테스트하지 않음
+      const beforeUpdatedAt = new Date();
+      const afterUpdatedAt = new Date();
 
       const userId = 1;
       const amount = 10;
+
+      jest
+        .spyOn(userPointTable, 'selectById')
+        .mockImplementation(async (_userId: number) => ({
+          id: _userId,
+          point: 0,
+          updateMillis: beforeUpdatedAt.getTime(),
+        }));
+
+      jest
+        .spyOn(userPointTable, 'insertOrUpdate')
+        .mockImplementation(async (_userId: number, _amount: number) => ({
+          id: _userId,
+          point: _amount,
+          updateMillis: afterUpdatedAt.getTime(),
+        }));
+
       const userPointInfo = await pointService.chargePoint(userId, amount);
 
       expect(userPointInfo).toStrictEqual({
         id: userId,
         point: amount,
-        updateMillis: mockUpdatedAt.getTime(),
+        updateMillis: afterUpdatedAt.getTime(),
       });
     });
 
