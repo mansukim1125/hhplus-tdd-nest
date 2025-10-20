@@ -142,8 +142,24 @@ describe('PointService', () => {
 
     it('should throw an error when attempting to charge a negative point value', async () => {
       // 음의 포인트 값으로 충전을 시도하면 에러가 발생해야 함
+      jest
+        .spyOn(userPointTable, 'selectById')
+        .mockImplementation(async (_userId: number) => ({
+          id: _userId,
+          point: 0, // 초기 값: 0
+          updateMillis: new Date().getTime(),
+        }));
+
+      jest
+        .spyOn(userPointTable, 'insertOrUpdate')
+        .mockImplementation(async (_userId: number, _amount: number) => ({
+          id: _userId,
+          point: _amount, // 첫 포인트 적립 시: 10 포인트, 두 번째 포인트 적립 시: 20 포인트
+          updateMillis: new Date().getTime(),
+        }));
+
       await expect(async () => {
-        await pointService.chargePoint(1, -10);
+        return await pointService.chargePoint(1, -10);
       }).rejects.toThrow(new NegativePointError());
     });
   });
