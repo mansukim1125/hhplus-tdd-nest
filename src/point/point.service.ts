@@ -14,4 +14,12 @@ export class PointService {
       updateMillis: userPoint.updateMillis,
     };
   }
+
+  chargePoint(userId: number, amount: number) {
+    return {
+      id: userId,
+      point: amount,
+      updateMillis: new Date().getTime(),
+    };
+  }
 }
