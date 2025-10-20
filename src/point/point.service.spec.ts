@@ -160,7 +160,9 @@ describe('PointService', () => {
 
       await expect(async () => {
         return await pointService.chargePoint(1, -10);
-      }).rejects.toThrow(new NegativePointError());
+      }).rejects.toThrow(
+        new NegativePointError('음수 포인트는 적립할 수 없습니다.'),
+      );
     });
   });
 });
