@@ -139,5 +139,12 @@ describe('PointService', () => {
 
       expect(userPointInfo).toHaveProperty('point', 20);
     });
+
+    it('should throw an error when attempting to charge a negative point value', async () => {
+      // 음의 포인트 값으로 충전을 시도하면 에러가 발생해야 함
+      await expect(async () => {
+        await pointService.chargePoint(1, -10);
+      }).rejects.toThrow(new NegativePointError());
+    });
   });
 });
