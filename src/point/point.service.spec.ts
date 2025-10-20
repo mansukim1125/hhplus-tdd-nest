@@ -193,5 +193,33 @@ describe('PointService', () => {
 
       expect(deductPointInfo).toHaveProperty('point', 5);
     });
+
+    it('should throw an error when attempting to use a negative point value', async () => {
+      // 음수 포인트 차감 불가
+      const userId = 1;
+      const initialPointInfo = {
+        id: userId,
+        point: 10,
+        updateMillis: new Date().getTime(),
+      };
+
+      jest.spyOn(userPointTable, 'selectById').mockImplementation(async () => {
+        return initialPointInfo;
+      });
+
+      jest
+        .spyOn(userPointTable, 'insertOrUpdate')
+        .mockImplementation(async (_userId: number, _amount: number) => ({
+          id: _userId,
+          point: _amount,
+          updateMillis: new Date().getTime(),
+        }));
+
+      await expect(async () => {
+        return await pointService.usePoint(userId, -1);
+      }).rejects.toThrow(
+        new NegativePointError('음수 포인트는 사용할 수 없습니다.'),
+      );
+    });
   });
 });
