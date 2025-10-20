@@ -68,6 +68,7 @@ describe('PointService', () => {
 
   describe('charge', () => {
     it('should charge points for a user', async () => {
+      // 특정 유저에게 포인트 적립을 할 수 있는지 테스트
       const mockUpdatedAt = new Date();
 
       jest.useFakeTimers();
@@ -82,6 +83,16 @@ describe('PointService', () => {
         point: amount,
         updateMillis: mockUpdatedAt.getTime(),
       });
+    });
+
+    it('should return 20 points after charging 10 points twice', async () => {
+      // 10 포인트 적립 후 추가 10 포인트 적립 시 총 합 20 포인트 적립되었는지 확인
+      const userId = 1;
+      const amount = 10;
+      await pointService.chargePoint(userId, amount);
+      const userPointInfo = await pointService.chargePoint(userId, amount);
+
+      expect(userPointInfo).toHaveProperty('point', 20);
     });
   });
 });
