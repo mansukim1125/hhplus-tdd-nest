@@ -1,3 +1,4 @@
+import { NegativePointError } from '../common/errors/negative-point.error';
 import { UserPointTable } from '../database/userpoint.table';
 import { PointService } from './point.service';
 
@@ -62,6 +63,106 @@ describe('PointService', () => {
 
       expect(firstUserPointInfo.updateMillis).not.toEqual(
         secondUserPointInfo.updateMillis,
+      );
+    });
+  });
+
+  describe('charge', () => {
+    it('should charge points for a user', async () => {
+      // 특정 유저에게 포인트 적립을 할 수 있는지 테스트
+
+      // 해당 테스트에서는 업데이트 시점은 테스트하지 않음
+      const beforeUpdatedAt = new Date();
+      const afterUpdatedAt = new Date();
+
+      const userId = 1;
+      const amount = 10;
+
+      jest
+        .spyOn(userPointTable, 'selectById')
+        .mockImplementation(async (_userId: number) => ({
+          id: _userId,
+          point: 0,
+          updateMillis: beforeUpdatedAt.getTime(),
+        }));
+
+      jest
+        .spyOn(userPointTable, 'insertOrUpdate')
+        .mockImplementation(async (_userId: number, _amount: number) => ({
+          id: _userId,
+          point: _amount,
+          updateMillis: afterUpdatedAt.getTime(),
+        }));
+
+      const userPointInfo = await pointService.chargePoint(userId, amount);
+
+      expect(userPointInfo).toStrictEqual({
+        id: userId,
+        point: amount,
+        updateMillis: afterUpdatedAt.getTime(),
+      });
+    });
+
+    it('should return 20 points after charging 10 points twice', async () => {
+      // 10 포인트 적립 후 추가 10 포인트 적립 시 총 합 20 포인트 적립되었는지 확인
+      const userId = 1;
+      const amount = 10;
+
+      // 업데이트 시점은 테스트하지 않음
+
+      jest
+        .spyOn(userPointTable, 'selectById')
+        .mockImplementation(async (_userId: number) => ({
+          id: _userId,
+          point: 0, // 초기 값: 0
+          updateMillis: new Date().getTime(),
+        }));
+
+      jest
+        .spyOn(userPointTable, 'insertOrUpdate')
+        .mockImplementation(async (_userId: number, _amount: number) => ({
+          id: _userId,
+          point: _amount, // 첫 포인트 적립 시: 10 포인트, 두 번째 포인트 적립 시: 20 포인트
+          updateMillis: new Date().getTime(),
+        }));
+
+      await pointService.chargePoint(userId, amount);
+
+      jest
+        .spyOn(userPointTable, 'selectById')
+        .mockImplementation(async (_userId: number) => ({
+          id: _userId,
+          point: amount, // 포인트 조회: 10 포인트
+          updateMillis: new Date().getTime(),
+        }));
+
+      const userPointInfo = await pointService.chargePoint(userId, amount);
+
+      expect(userPointInfo).toHaveProperty('point', 20);
+    });
+
+    it('should throw an error when attempting to charge a negative point value', async () => {
+      // 음의 포인트 값으로 충전을 시도하면 에러가 발생해야 함
+      jest
+        .spyOn(userPointTable, 'selectById')
+        .mockImplementation(async (_userId: number) => ({
+          id: _userId,
+          point: 0, // 초기 값: 0
+          updateMillis: new Date().getTime(),
+        }));
+
+      jest
+        .spyOn(userPointTable, 'insertOrUpdate')
+        .mockImplementation(async (_userId: number, _amount: number) => ({
+          id: _userId,
+          point: _amount, // 첫 포인트 적립 시: 10 포인트, 두 번째 포인트 적립 시: 20 포인트
+          updateMillis: new Date().getTime(),
+        }));
+
+      await expect(async () => {
+        return await pointService.chargePoint(1, -10);
+      }).rejects.toThrow(
+        new NegativePointError('음수 포인트는 적립할 수 없습니다.'),
       );
     });
   });
