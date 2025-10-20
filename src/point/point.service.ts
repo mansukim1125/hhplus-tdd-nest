@@ -34,7 +34,17 @@ export class PointService {
     };
   }
 
-  usePoint(userId: number, amount: number) {
-    return { point: 5 };
+  async usePoint(userId: number, amount: number) {
+    const userPoint = await this.getPoint({ userId });
+    const updatedUserPoint = await this.userPointTable.insertOrUpdate(
+      userPoint.id,
+      userPoint.point - amount,
+    );
+
+    return {
+      id: updatedUserPoint.id,
+      point: updatedUserPoint.point,
+      updateMillis: updatedUserPoint.updateMillis,
+    };
   }
 }
