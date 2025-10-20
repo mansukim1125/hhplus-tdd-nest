@@ -35,6 +35,10 @@ export class PointService {
   }
 
   async usePoint(userId: number, amount: number) {
+    if (amount < 0) {
+      throw new NegativePointError('음수 포인트는 사용할 수 없습니다.');
+    }
+
     const userPoint = await this.getPoint({ userId });
     const updatedUserPoint = await this.userPointTable.insertOrUpdate(
       userPoint.id,
