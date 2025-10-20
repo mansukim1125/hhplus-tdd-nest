@@ -65,4 +65,23 @@ describe('PointService', () => {
       );
     });
   });
+
+  describe('charge', () => {
+    it('should charge points for a user', async () => {
+      const mockUpdatedAt = new Date();
+
+      jest.useFakeTimers();
+      jest.setSystemTime(mockUpdatedAt);
+
+      const userId = 1;
+      const amount = 10;
+      const userPointInfo = await pointService.chargePoint(userId, amount);
+
+      expect(userPointInfo).toStrictEqual({
+        id: userId,
+        point: amount,
+        updateMillis: mockUpdatedAt.getTime(),
+      });
+    });
+  });
 });
