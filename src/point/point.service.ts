@@ -33,4 +33,8 @@ export class PointService {
       updateMillis: updatedUserPoint.updateMillis,
     };
   }
+
+  usePoint(userId: number, amount: number) {
+    return { point: 5 };
+  }
 }
