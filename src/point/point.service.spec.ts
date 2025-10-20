@@ -1,3 +1,4 @@
+import { NotEnoughPointError } from '../common/errors/not-enough-point.error';
 import { NegativePointError } from '../common/errors/negative-point.error';
 import { UserPointTable } from '../database/userpoint.table';
 import { PointService } from './point.service';

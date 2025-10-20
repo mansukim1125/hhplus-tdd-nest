@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UserPointTable } from '../database/userpoint.table';
 import { NegativePointError } from '../common/errors/negative-point.error';
+import { NotEnoughPointError } from '../common/errors/not-enough-point.error';
 
 @Injectable()
 export class PointService {
@@ -40,6 +41,11 @@ export class PointService {
     }
 
     const userPoint = await this.getPoint({ userId });
+
+    if (userPoint.point < amount) {
+      throw new NotEnoughPointError('포인트가 부족합니다.');
+    }
+
     const updatedUserPoint = await this.userPointTable.insertOrUpdate(
       userPoint.id,
       userPoint.point - amount,
