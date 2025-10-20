@@ -1,3 +1,4 @@
+import { NotEnoughPointError } from '../common/errors/not-enough-point.error';
 import { NegativePointError } from '../common/errors/negative-point.error';
 import { UserPointTable } from '../database/userpoint.table';
 import { PointService } from './point.service';
@@ -164,6 +165,88 @@ describe('PointService', () => {
       }).rejects.toThrow(
         new NegativePointError('음수 포인트는 적립할 수 없습니다.'),
       );
+    });
+  });
+
+  describe('use', () => {
+    it('should deduct 5 points from user with 10 points, resulting in 5 points', async () => {
+      // 유저가 가진 10 포인트에서 5포인트 차감 시 5포인트가 되어야 함.
+      const userId = 1;
+      const initialPointInfo = {
+        id: userId,
+        point: 10,
+        updateMillis: new Date().getTime(),
+      };
+
+      jest.spyOn(userPointTable, 'selectById').mockImplementation(async () => {
+        return initialPointInfo;
+      });
+
+      jest
+        .spyOn(userPointTable, 'insertOrUpdate')
+        .mockImplementation(async (_userId: number, _amount: number) => ({
+          id: _userId,
+          point: _amount, // 첫 포인트 적립 시: 10 포인트, 두 번째 포인트 적립 시: 20 포인트
+          updateMillis: new Date().getTime(),
+        }));
+
+      const deductPointInfo = await pointService.usePoint(userId, 5);
+
+      expect(deductPointInfo).toHaveProperty('point', 5);
+    });
+
+    it('should throw an error when attempting to use a negative point value', async () => {
+      // 음수 포인트 차감 불가
+      const userId = 1;
+      const initialPointInfo = {
+        id: userId,
+        point: 10,
+        updateMillis: new Date().getTime(),
+      };
+
+      jest.spyOn(userPointTable, 'selectById').mockImplementation(async () => {
+        return initialPointInfo;
+      });
+
+      jest
+        .spyOn(userPointTable, 'insertOrUpdate')
+        .mockImplementation(async (_userId: number, _amount: number) => ({
+          id: _userId,
+          point: _amount,
+          updateMillis: new Date().getTime(),
+        }));
+
+      await expect(async () => {
+        return await pointService.usePoint(userId, -1);
+      }).rejects.toThrow(
+        new NegativePointError('음수 포인트는 사용할 수 없습니다.'),
+      );
+    });
+
+    it('should throw an error when attempting to use more points than the user has', async () => {
+      // 유저가 보유한 포인트보다 더 많은 포인트를 사용할 수 없다.
+      const userId = 1;
+      const initialPointInfo = {
+        id: userId,
+        point: 10,
+        updateMillis: new Date().getTime(),
+      };
+
+      jest.spyOn(userPointTable, 'selectById').mockImplementation(async () => {
+        return initialPointInfo;
+      });
+
+      jest
+        .spyOn(userPointTable, 'insertOrUpdate')
+        .mockImplementation(async (_userId: number, _amount: number) => ({
+          id: _userId,
+          point: _amount,
+          updateMillis: new Date().getTime(),
+        }));
+
+      await expect(async () => {
+        return await pointService.usePoint(userId, 12);
+      }).rejects.toThrow(new NotEnoughPointError('포인트가 부족합니다.'));
     });
   });
 });
