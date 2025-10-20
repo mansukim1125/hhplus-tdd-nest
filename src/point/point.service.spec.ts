@@ -166,4 +166,32 @@ describe('PointService', () => {
       );
     });
   });
+
+  describe('use', () => {
+    it('should deduct 5 points from user with 10 points, resulting in 5 points', async () => {
+      // 유저가 가진 10 포인트에서 5포인트 차감 시 5포인트가 되어야 함.
+      const userId = 1;
+      const initialPointInfo = {
+        id: userId,
+        point: 10,
+        updateMillis: new Date().getTime(),
+      };
+
+      jest.spyOn(userPointTable, 'selectById').mockImplementation(async () => {
+        return initialPointInfo;
+      });
+
+      jest
+        .spyOn(userPointTable, 'insertOrUpdate')
+        .mockImplementation(async (_userId: number, _amount: number) => ({
+          id: _userId,
+          point: _amount, // 첫 포인트 적립 시: 10 포인트, 두 번째 포인트 적립 시: 20 포인트
+          updateMillis: new Date().getTime(),
+        }));
+
+      const deductPointInfo = await pointService.usePoint(userId, 5);
+
+      expect(deductPointInfo).toHaveProperty('point', 5);
+    });
+  });
 });
