@@ -3,6 +3,8 @@ import { UserPointTable } from '../database/userpoint.table';
 
 @Injectable()
 export class PointService {
+  private userPoint: number = 0;
+
   constructor(private readonly userPointTable: UserPointTable) {}
 
   async getPoint({ userId }: { userId: number }) {
@@ -16,9 +18,11 @@ export class PointService {
   }
 
   chargePoint(userId: number, amount: number) {
+    this.userPoint += amount;
+
     return {
       id: userId,
-      point: amount,
+      point: this.userPoint,
       updateMillis: new Date().getTime(),
     };
   }
