@@ -61,6 +61,12 @@ export class PointService {
       userPoint.id,
       userPoint.point - amount,
     );
+    await this.pointHistoryTable.insert(
+      userId,
+      amount,
+      TransactionType.USE,
+      new Date().getTime(),
+    );
 
     return {
       id: updatedUserPoint.id,
