@@ -12,8 +12,8 @@ describe('PointService', () => {
 
   beforeEach(() => {
     userPointTable = new UserPointTable();
-    pointService = new PointService(userPointTable);
     pointHistoryTable = new PointHistoryTable();
+    pointService = new PointService(userPointTable, pointHistoryTable);
   });
 
   describe('getPoint', () => {
@@ -257,15 +257,15 @@ describe('PointService', () => {
   describe('history', () => {
     it('should return the point charge/use history for a specific user', async () => {
       // 특정 유저의 포인트 적립/사용 내역을 조회한다.
-      const userId = 1;
+      const userId = 2;
       const updatedAt = new Date();
       jest
         .spyOn(pointHistoryTable, 'selectAllByUserId')
-        .mockImplementation(async () => {
+        .mockImplementation(async (userId: number) => {
           return [
             {
               id: 1,
-              userId: 1,
+              userId,
               amount: 10,
               type: TransactionType.CHARGE,
               timeMillis: updatedAt.getTime(),
@@ -278,7 +278,7 @@ describe('PointService', () => {
       expect(pointHistory).toStrictEqual([
         {
           id: 1,
-          userId: 1,
+          userId,
           amount: 10,
           type: TransactionType.CHARGE,
           timeMillis: updatedAt.getTime(),

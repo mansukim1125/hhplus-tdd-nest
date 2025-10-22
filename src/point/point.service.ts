@@ -3,10 +3,14 @@ import { UserPointTable } from '../database/userpoint.table';
 import { NegativePointError } from '../common/errors/negative-point.error';
 import { NotEnoughPointError } from '../common/errors/not-enough-point.error';
 import { TransactionType } from './point.model';
+import { PointHistoryTable } from '../database/pointhistory.table';
 
 @Injectable()
 export class PointService {
-  constructor(private readonly userPointTable: UserPointTable) {}
+  constructor(
+    private readonly userPointTable: UserPointTable,
+    private readonly pointHistoryTable: PointHistoryTable,
+  ) {}
 
   async getPoint({ userId }: { userId: number }) {
     const userPoint = await this.userPointTable.selectById(userId);
@@ -59,15 +63,7 @@ export class PointService {
     };
   }
 
-  getPointHistory(userId: number) {
-    return [
-      {
-        id: 1,
-        userId: 1,
-        amount: 10,
-        type: TransactionType.CHARGE,
-        timeMillis: new Date().getTime(),
-      },
-    ];
+  async getPointHistory(userId: number) {
+    return await this.pointHistoryTable.selectAllByUserId(userId);
   }
 }
