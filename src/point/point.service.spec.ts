@@ -1,15 +1,19 @@
 import { NotEnoughPointError } from '../common/errors/not-enough-point.error';
 import { NegativePointError } from '../common/errors/negative-point.error';
 import { UserPointTable } from '../database/userpoint.table';
+import { PointHistoryTable } from '../database/pointhistory.table';
 import { PointService } from './point.service';
+import { TransactionType } from './point.model';
 
 describe('PointService', () => {
   let pointService: PointService;
   let userPointTable: UserPointTable;
+  let pointHistoryTable: PointHistoryTable;
 
   beforeEach(() => {
     userPointTable = new UserPointTable();
     pointService = new PointService(userPointTable);
+    pointHistoryTable = new PointHistoryTable();
   });
 
   describe('getPoint', () => {
@@ -247,6 +251,39 @@ describe('PointService', () => {
       await expect(async () => {
         return await pointService.usePoint(userId, 12);
       }).rejects.toThrow(new NotEnoughPointError('포인트가 부족합니다.'));
+    });
+  });
+
+  describe('history', () => {
+    it('should return the point charge/use history for a specific user', async () => {
+      // 특정 유저의 포인트 적립/사용 내역을 조회한다.
+      const userId = 1;
+      const updatedAt = new Date();
+      jest
+        .spyOn(pointHistoryTable, 'selectAllByUserId')
+        .mockImplementation(async () => {
+          return [
+            {
+              id: 1,
+              userId: 1,
+              amount: 10,
+              type: TransactionType.CHARGE,
+              timeMillis: updatedAt.getTime(),
+            },
+          ];
+        });
+
+      const pointHistory = await pointService.getPointHistory(userId);
+
+      expect(pointHistory).toStrictEqual([
+        {
+          id: 1,
+          userId: 1,
+          amount: 10,
+          type: TransactionType.CHARGE,
+          timeMillis: updatedAt.getTime(),
+        },
+      ]);
     });
   });
 });
