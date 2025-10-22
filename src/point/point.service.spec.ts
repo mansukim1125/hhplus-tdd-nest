@@ -285,5 +285,16 @@ describe('PointService', () => {
         },
       ]);
     });
+
+    it('should have a history length of 1 after a single point charge', async () => {
+      // 포인트를 1회 적립한 후 포인트 내역을 조회한다.
+      // 조회된 포인트 내역의 길이는 1이어야 한다.
+      const userId = 1;
+      await pointService.chargePoint(userId, 10);
+
+      const pointHistory = await pointService.getPointHistory(userId);
+
+      expect(pointHistory).toHaveLength(1);
+    });
   });
 });
