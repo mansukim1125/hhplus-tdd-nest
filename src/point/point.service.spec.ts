@@ -296,5 +296,30 @@ describe('PointService', () => {
 
       expect(pointHistory).toHaveLength(1);
     });
+
+    it('should have a history length of 2 after a single point deduction', async () => {
+      // 포인트를 1회 차감한 후 포인트 내역을 조회한다.
+      // 조회된 포인트 내역의 길이는 2이어야 한다.
+      const userId = 1;
+      await pointService.chargePoint(userId, 10);
+      await pointService.usePoint(userId, 5);
+
+      const userPointHistory = await pointService.getPointHistory(userId);
+
+      expect(userPointHistory).toHaveLength(2);
+
+      expect(userPointHistory[0]).toHaveProperty('userId', 1);
+      expect(userPointHistory[0]).toHaveProperty('id', 1);
+      expect(userPointHistory[0]).toHaveProperty('amount', 10);
+      expect(userPointHistory[0]).toHaveProperty(
+        'type',
+        TransactionType.CHARGE,
+      );
+
+      expect(userPointHistory[1]).toHaveProperty('userId', 1);
+      expect(userPointHistory[1]).toHaveProperty('id', 2);
+      expect(userPointHistory[1]).toHaveProperty('amount', 5);
+      expect(userPointHistory[1]).toHaveProperty('type', TransactionType.USE);
+    });
   });
 });
