@@ -2,10 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { UserPointTable } from '../database/userpoint.table';
 import { NegativePointError } from '../common/errors/negative-point.error';
 import { NotEnoughPointError } from '../common/errors/not-enough-point.error';
+import { PointHistoryTable } from '../database/pointhistory.table';
+import { TransactionType } from './point.model';
 
 @Injectable()
 export class PointService {
-  constructor(private readonly userPointTable: UserPointTable) {}
+  constructor(
+    private readonly userPointTable: UserPointTable,
+    private readonly pointHistoryTable: PointHistoryTable,
+  ) {}
 
   async getPoint({ userId }: { userId: number }) {
     const userPoint = await this.userPointTable.selectById(userId);
@@ -26,6 +31,12 @@ export class PointService {
     const updatedUserPoint = await this.userPointTable.insertOrUpdate(
       userPoint.id,
       userPoint.point + amount,
+    );
+    await this.pointHistoryTable.insert(
+      userId,
+      amount,
+      TransactionType.CHARGE,
+      new Date().getTime(),
     );
 
     return {
@@ -50,11 +61,21 @@ export class PointService {
       userPoint.id,
       userPoint.point - amount,
     );
+    await this.pointHistoryTable.insert(
+      userId,
+      amount,
+      TransactionType.USE,
+      new Date().getTime(),
+    );
 
     return {
       id: updatedUserPoint.id,
       point: updatedUserPoint.point,
       updateMillis: updatedUserPoint.updateMillis,
     };
+  }
+
+  async getPointHistory(userId: number) {
+    return await this.pointHistoryTable.selectAllByUserId(userId);
   }
 }

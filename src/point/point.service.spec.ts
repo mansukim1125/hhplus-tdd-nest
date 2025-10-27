@@ -1,15 +1,19 @@
 import { NotEnoughPointError } from '../common/errors/not-enough-point.error';
 import { NegativePointError } from '../common/errors/negative-point.error';
 import { UserPointTable } from '../database/userpoint.table';
+import { PointHistoryTable } from '../database/pointhistory.table';
 import { PointService } from './point.service';
+import { TransactionType } from './point.model';
 
 describe('PointService', () => {
   let pointService: PointService;
   let userPointTable: UserPointTable;
+  let pointHistoryTable: PointHistoryTable;
 
   beforeEach(() => {
     userPointTable = new UserPointTable();
-    pointService = new PointService(userPointTable);
+    pointHistoryTable = new PointHistoryTable();
+    pointService = new PointService(userPointTable, pointHistoryTable);
   });
 
   describe('getPoint', () => {
@@ -247,6 +251,75 @@ describe('PointService', () => {
       await expect(async () => {
         return await pointService.usePoint(userId, 12);
       }).rejects.toThrow(new NotEnoughPointError('포인트가 부족합니다.'));
+    });
+  });
+
+  describe('history', () => {
+    it('should return the point charge/use history for a specific user', async () => {
+      // 특정 유저의 포인트 적립/사용 내역을 조회한다.
+      const userId = 2;
+      const updatedAt = new Date();
+      jest
+        .spyOn(pointHistoryTable, 'selectAllByUserId')
+        .mockImplementation(async (userId: number) => {
+          return [
+            {
+              id: 1,
+              userId,
+              amount: 10,
+              type: TransactionType.CHARGE,
+              timeMillis: updatedAt.getTime(),
+            },
+          ];
+        });
+
+      const pointHistory = await pointService.getPointHistory(userId);
+
+      expect(pointHistory).toStrictEqual([
+        {
+          id: 1,
+          userId,
+          amount: 10,
+          type: TransactionType.CHARGE,
+          timeMillis: updatedAt.getTime(),
+        },
+      ]);
+    });
+
+    it('should have a history length of 1 after a single point charge', async () => {
+      // 포인트를 1회 적립한 후 포인트 내역을 조회한다.
+      // 조회된 포인트 내역의 길이는 1이어야 한다.
+      const userId = 1;
+      await pointService.chargePoint(userId, 10);
+
+      const pointHistory = await pointService.getPointHistory(userId);
+
+      expect(pointHistory).toHaveLength(1);
+    });
+
+    it('should have a history length of 2 after a single point deduction', async () => {
+      // 포인트를 1회 차감한 후 포인트 내역을 조회한다.
+      // 조회된 포인트 내역의 길이는 2이어야 한다.
+      const userId = 1;
+      await pointService.chargePoint(userId, 10);
+      await pointService.usePoint(userId, 5);
+
+      const userPointHistory = await pointService.getPointHistory(userId);
+
+      expect(userPointHistory).toHaveLength(2);
+
+      expect(userPointHistory[0]).toHaveProperty('userId', 1);
+      expect(userPointHistory[0]).toHaveProperty('id', 1);
+      expect(userPointHistory[0]).toHaveProperty('amount', 10);
+      expect(userPointHistory[0]).toHaveProperty(
+        'type',
+        TransactionType.CHARGE,
+      );
+
+      expect(userPointHistory[1]).toHaveProperty('userId', 1);
+      expect(userPointHistory[1]).toHaveProperty('id', 2);
+      expect(userPointHistory[1]).toHaveProperty('amount', 5);
+      expect(userPointHistory[1]).toHaveProperty('type', TransactionType.USE);
     });
   });
 });
