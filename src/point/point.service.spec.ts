@@ -19,7 +19,7 @@ describe('PointService', () => {
   describe('getPoint', () => {
     it("should return user's point information", async () => {
       // 특정 유저의 포인트 정보를 조회한다.
-      // 포인트 정보 업데이트 시점을 mock
+      // 포인트 정보 업데이트 시점을 moc
       const updatedAt = new Date();
 
       const userPoint = {
